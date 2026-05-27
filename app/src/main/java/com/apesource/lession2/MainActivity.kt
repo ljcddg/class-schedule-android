@@ -111,7 +111,9 @@ class MainActivity : ComponentActivity() {
                         SemesterCalculator.parseDate(savedStartDate ?: "")
                     }
 
-                    var displayWeek by remember { mutableIntStateOf(SemesterCalculator.getCurrentWeek()) }
+                    var displayWeek by remember {
+                        mutableIntStateOf(SemesterCalculator.getWeekForDate(LocalDate.now(), customStartDate))
+                    }
 
                     var semesterStartDate by remember { mutableStateOf(settingsManager.getSemesterStartDate() ?: "") }
 
@@ -738,7 +740,7 @@ class MainActivity : ComponentActivity() {
                                 onSave = { newSemesterStartDate ->
                                     settingsManager.saveSemesterStartDate(newSemesterStartDate)
                                     semesterStartDate = newSemesterStartDate
-                                    displayWeek = SemesterCalculator.getCurrentWeek()
+                                    displayWeek = SemesterCalculator.calculateWeekFromStart(newSemesterStartDate)
                                     currentScreen = Screen.Schedule
                                 },
                                 onBack = { currentScreen = Screen.Schedule }

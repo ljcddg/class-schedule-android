@@ -185,7 +185,7 @@ fun ScheduleTable(
 
             schedule.forEachIndexed { index, day ->
                 val date = firstDayOfWeek.plusDays(index.toLong())
-                val isToday = date.isEqual(currentDate)
+                val isToday = date.isEqual(LocalDate.now())
                 val dayNumber = date.dayOfMonth
 
                 Box(
