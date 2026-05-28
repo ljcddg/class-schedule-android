@@ -229,16 +229,18 @@ class MainActivity : ComponentActivity() {
                         val entryIdToRemove = editingEntryId
                         val currentSchedule = allSchedule.toMutableList()
                         if (entryIdToRemove != null) {
-                            // 编辑模式：删除所有同名的旧条目，再用新条目替换
+                            // 编辑模式：仅删除当前编辑条目所在天的旧记录
                             val oldEntry = currentSchedule.flatMap { it.courses }.find { it.id == entryIdToRemove }
-                            val removeName = oldEntry?.name ?: ""
-                            for (day in currentSchedule.indices) {
-                                val updatedDay = currentSchedule[day].copy(
-                                    courses = currentSchedule[day].courses.filter {
-                                        it.name != removeName || it.name.isBlank()
-                                    }
-                                )
-                                currentSchedule[day] = updatedDay
+                            if (oldEntry != null) {
+                                val oldDayIndex = currentSchedule.indexOfFirst { it.dayOfWeek == oldEntry.dayOfWeek }
+                                if (oldDayIndex >= 0) {
+                                    val updatedDay = currentSchedule[oldDayIndex].copy(
+                                        courses = currentSchedule[oldDayIndex].courses.filter {
+                                            it.id != entryIdToRemove
+                                        }
+                                    )
+                                    currentSchedule[oldDayIndex] = updatedDay
+                                }
                             }
                             editingCourseId = null
                             editingEntryId = null
@@ -259,13 +261,13 @@ class MainActivity : ComponentActivity() {
 
                     fun handleDeleteCourse(course: Course) {
                         if (currentScheduleId == null) return
-                        val targetCourseId = course.courseId.ifEmpty { course.id }
                         val currentSchedule = allSchedule.toMutableList()
-                        for (day in currentSchedule.indices) {
-                            val updatedDay = currentSchedule[day].copy(
-                                courses = currentSchedule[day].courses.filter { it.courseId != targetCourseId && it.id != course.id }
+                        val dayIndex = currentSchedule.indexOfFirst { it.dayOfWeek == course.dayOfWeek }
+                        if (dayIndex >= 0) {
+                            val updatedDay = currentSchedule[dayIndex].copy(
+                                courses = currentSchedule[dayIndex].courses.filter { it.id != course.id }
                             )
-                            currentSchedule[day] = updatedDay
+                            currentSchedule[dayIndex] = updatedDay
                         }
                         updateCurrentSchedule(currentSchedule)
                         selectedCourse.value = null
