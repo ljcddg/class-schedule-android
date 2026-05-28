@@ -229,17 +229,17 @@ class MainActivity : ComponentActivity() {
                         val entryIdToRemove = editingEntryId
                         val currentSchedule = allSchedule.toMutableList()
                         if (entryIdToRemove != null) {
-                            // 编辑模式：仅删除当前编辑条目所在天的旧记录
+                            // 编辑模式：删除所有同名课程（相同 courseId）的旧条目，统一用新配置替换
                             val oldEntry = currentSchedule.flatMap { it.courses }.find { it.id == entryIdToRemove }
-                            if (oldEntry != null) {
-                                val oldDayIndex = currentSchedule.indexOfFirst { it.dayOfWeek == oldEntry.dayOfWeek }
-                                if (oldDayIndex >= 0) {
-                                    val updatedDay = currentSchedule[oldDayIndex].copy(
-                                        courses = currentSchedule[oldDayIndex].courses.filter {
-                                            it.id != entryIdToRemove
+                            val targetCourseId = oldEntry?.courseId?.ifEmpty { oldEntry.id } ?: ""
+                            if (targetCourseId.isNotEmpty()) {
+                                for (day in currentSchedule.indices) {
+                                    val updatedDay = currentSchedule[day].copy(
+                                        courses = currentSchedule[day].courses.filter {
+                                            it.courseId != targetCourseId
                                         }
                                     )
-                                    currentSchedule[oldDayIndex] = updatedDay
+                                    currentSchedule[day] = updatedDay
                                 }
                             }
                             editingCourseId = null
@@ -287,9 +287,9 @@ class MainActivity : ComponentActivity() {
                         val targetCourseId = course.courseId.ifEmpty { course.id }
                         editingCourseId = course.id
                         editingEntryId = course.id
-                        // 仅查找同一天内的同名课程时间段，避免跨天误带其他天的日程
+                        // 收集所有同名课程的时间段（跨天），编辑时统一展示
                         val relatedCourses = allSchedule.flatMap { it.courses }
-                            .filter { it.name == course.name && it.dayOfWeek == course.dayOfWeek }
+                            .filter { it.name == course.name }
                             .distinctBy { it.id }
                         val relatedTimeSlots = relatedCourses.map { rc ->
                             TimeSlot(
