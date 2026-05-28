@@ -287,9 +287,9 @@ class MainActivity : ComponentActivity() {
                         val targetCourseId = course.courseId.ifEmpty { course.id }
                         editingCourseId = course.id
                         editingEntryId = course.id
-                        // 按课程名查找所有同名课程的时间段
+                        // 仅查找同一天内的同名课程时间段，避免跨天误带其他天的日程
                         val relatedCourses = allSchedule.flatMap { it.courses }
-                            .filter { it.name == course.name }
+                            .filter { it.name == course.name && it.dayOfWeek == course.dayOfWeek }
                             .distinctBy { it.id }
                         val relatedTimeSlots = relatedCourses.map { rc ->
                             TimeSlot(
